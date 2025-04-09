@@ -1,0 +1,119 @@
+ComparadorProduto.java
+
+public interface ComparadorProduto {
+    int comparar(Produto p1, Produto p2);
+}
+
+ComparadorPorId.java
+
+public class ComparadorPorId implements ComparadorProduto {
+    public int comparar(Produto p1, Produto p2) {
+        return Integer.compare(p1.getId(), p2.getId());
+    }
+}
+
+ComparadorPorDescricao.java
+
+public class ComparadorPorDescricao implements ComparadorProduto {
+    public int comparar(Produto p1, Produto p2) {
+        return p1.getDescricao().compareTo(p2.getDescricao());
+    }
+}
+
+SelectionSort.java
+
+import java.util.List;
+import java.util.Collections;
+
+public class SelectionSort {
+    public static void ordenar(List<Produto> lista, ComparadorProduto comp) {
+        for (int i = 0; i < lista.size() - 1; i++) {
+            int menor = i;
+            for (int j = i + 1; j < lista.size(); j++) {
+                if (comp.comparar(lista.get(j), lista.get(menor)) < 0) {
+                    menor = j;
+                }
+            }
+            Collections.swap(lista, i, menor);
+        }
+    }
+}
+
+MergeSort.java
+
+import java.util.List;
+import java.util.ArrayList;
+
+public class MergeSort {
+    public static void ordenar(List<Produto> lista, ComparadorProduto comp) {
+        if (lista.size() > 1) {
+            int meio = lista.size() / 2;
+            List<Produto> esquerda = new ArrayList<>(lista.subList(0, meio));
+            List<Produto> direita = new ArrayList<>(lista.subList(meio, lista.size()));
+
+            ordenar(esquerda, comp);
+            ordenar(direita, comp);
+
+            intercalar(lista, esquerda, direita, comp);
+        }
+    }
+
+    private static void intercalar(List<Produto> lista, List<Produto> esq, List<Produto> dir, ComparadorProduto comp) {
+        int i = 0, j = 0, k = 0;
+        while (i < esq.size() && j < dir.size()) {
+            if (comp.comparar(esq.get(i), dir.get(j)) <= 0) {
+                lista.set(k++, esq.get(i++));
+            } else {
+                lista.set(k++, dir.get(j++));
+            }
+        }
+        while (i < esq.size()) lista.set(k++, esq.get(i++));
+        while (j < dir.size()) lista.set(k++, dir.get(j++));
+    }
+}
+
+AppOficina.java (atualizado)
+
+import java.io.*;
+import java.util.*;
+
+public class AppOficina {
+    public static void main(String[] args) throws Exception {
+        List<Produto> produtos = carregarProdutos("produtos.txt");
+
+        List<Produto> ordenadoPorId = new ArrayList<>(produtos);
+        List<Produto> ordenadoPorDescricao = new ArrayList<>(produtos);
+
+        MergeSort.ordenar(ordenadoPorId, new ComparadorPorId());
+        SelectionSort.ordenar(ordenadoPorDescricao, new ComparadorPorDescricao());
+
+        System.out.println("Ordenado por ID:");
+        for (Produto p : ordenadoPorId) {
+            System.out.println(p);
+        }
+
+        System.out.println("\nOrdenado por Descrição:");
+        for (Produto p : ordenadoPorDescricao) {
+            System.out.println(p);
+        }
+    }
+
+    public static List<Produto> carregarProdutos(String nomeArquivo) throws IOException {
+        List<Produto> produtos = new ArrayList<>();
+        BufferedReader reader = new BufferedReader(new FileReader(nomeArquivo));
+        String linha;
+        while ((linha = reader.readLine()) != null) {
+            String[] partes = linha.split(";");
+            int id = Integer.parseInt(partes[0]);
+            String descricao = partes[1];
+            double preco = Double.parseDouble(partes[2]);
+            boolean perecivel = Boolean.parseBoolean(partes[3]);
+
+            Produto p = perecivel ? new ProdutoPerecivel(id, descricao, preco)
+                                  : new ProdutoNaoPerecivel(id, descricao, preco);
+            produtos.add(p);
+        }
+        reader.close();
+        return produtos;
+    }
+}
