@@ -1,0 +1,136 @@
+import java.util.Arrays;
+import java.util.Random;
+
+public class App {
+    static final int[] tamanhosTestePequeno = {3, 6, 12, 24, 48};
+    static Random aleatorio = new Random(42);
+
+    static class Produto {
+        int identificador;
+        String descricao;
+
+        Produto(int id, String desc) {
+            this.identificador = id;
+            this.descricao = desc;
+        }
+
+        @Override
+        public String toString() {
+            return "[" + identificador + " - " + descricao + "]";
+        }
+    }
+
+    // Geração de produtos aleatórios
+    static Produto[] gerarProdutos(int tamanho) {
+        Produto[] produtos = new Produto[tamanho];
+        for (int i = 0; i < tamanho; i++) {
+            int id = aleatorio.nextInt(1, tamanho * 2);
+            String desc = "Produto" + aleatorio.nextInt(100);
+            produtos[i] = new Produto(id, desc);
+        }
+        return produtos;
+    }
+
+    // Ordenação por Seleção (por ID)
+    static void ordenarPorSelecao(Produto[] vetor) {
+        for (int i = 0; i < vetor.length - 1; i++) {
+            int menor = i;
+            for (int j = i + 1; j < vetor.length; j++) {
+                if (vetor[j].identificador < vetor[menor].identificador) {
+                    menor = j;
+                }
+            }
+            Produto temp = vetor[i];
+            vetor[i] = vetor[menor];
+            vetor[menor] = temp;
+        }
+    }
+
+    // MergeSort (por descrição)
+    static void mergeSort(Produto[] vetor) {
+        if (vetor.length <= 1)
+            return;
+
+        int meio = vetor.length / 2;
+        Produto[] esquerda = Arrays.copyOfRange(vetor, 0, meio);
+        Produto[] direita = Arrays.copyOfRange(vetor, meio, vetor.length);
+
+        mergeSort(esquerda);
+        mergeSort(direita);
+
+        merge(vetor, esquerda, direita);
+    }
+
+    static void merge(Produto[] vetor, Produto[] esq, Produto[] dir) {
+        int i = 0, j = 0, k = 0;
+
+        while (i < esq.length && j < dir.length) {
+            if (esq[i].descricao.compareTo(dir[j].descricao) <= 0) {
+                vetor[k++] = esq[i++];
+            } else {
+                vetor[k++] = dir[j++];
+            }
+        }
+
+        while (i < esq.length) {
+            vetor[k++] = esq[i++];
+        }
+
+        while (j < dir.length) {
+            vetor[k++] = dir[j++];
+        }
+    }
+
+    // Busca binária por ID
+    static Produto buscaBinariaPorId(Produto[] vetor, int id) {
+        int ini = 0, fim = vetor.length - 1;
+
+        while (ini <= fim) {
+            int meio = (ini + fim) / 2;
+            if (vetor[meio].identificador == id)
+                return vetor[meio];
+            else if (vetor[meio].identificador < id)
+                ini = meio + 1;
+            else
+                fim = meio - 1;
+        }
+
+        return null;
+    }
+
+    // Busca binária por descrição
+    static Produto buscaBinariaPorDescricao(Produto[] vetor, String descricao) {
+        int ini = 0, fim = vetor.length - 1;
+
+        while (ini <= fim) {
+            int meio = (ini + fim) / 2;
+            int cmp = vetor[meio].descricao.compareTo(descricao);
+            if (cmp == 0)
+                return vetor[meio];
+            else if (cmp < 0)
+                ini = meio + 1;
+            else
+                fim = meio - 1;
+        }
+
+        return null;
+    }
+
+    public static void main(String[] args) {
+        // Carregamento de dados
+        Produto[] produtos = gerarProdutos(12);
+        Produto[] produtosPorId = Arrays.copyOf(produtos, produtos.length);
+        Produto[] produtosPorDescricao = Arrays.copyOf(produtos, produtos.length);
+
+        // Ordenações
+        ordenarPorSelecao(produtosPorId);
+        mergeSort(produtosPorDescricao);
+
+        // Exemplo de localização eficiente
+        int idBusca = produtosPorId[3].identificador;
+        String descBusca = produtosPorDescricao[2].descricao;
+
+        System.out.println("Produto com ID " + idBusca + ": " + buscaBinariaPorId(produtosPorId, idBusca));
+        System.out.println("Produto com descrição \"" + descBusca + "\": " + buscaBinariaPorDescricao(produtosPorDescricao, descBusca));
+    }
+}
